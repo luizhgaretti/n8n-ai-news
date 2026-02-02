@@ -1,5 +1,4 @@
 # 🤖 n8n AI News Digest
----
 
 ## ✨ Funcionalidades
 * **Coleta Automática:** Busca notícias de IA das últimas 24h via Google News RSS.
