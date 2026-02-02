@@ -1,7 +1,4 @@
 # 🤖 n8n AI News Digest
-
-Workflow automatizado para curadoria de notícias de Inteligência Artificial. Ele busca, resume e analisa as principais novidades do dia, enviando tudo pronto para o Slack.
-
 ---
 
 ## ✨ Funcionalidades
@@ -21,6 +18,3 @@ Workflow automatizado para curadoria de notícias de Inteligência Artificial. E
 * **OpenAI / Azure OpenAI** (Processamento de Linguagem Natural)
 * **Google News RSS** (Fonte de dados)
 * **Slack** (Interface de entrega)
-
----
-*Desenvolvido para otimizar o consumo de informação e combater o excesso de abas abertas.* 🚀
