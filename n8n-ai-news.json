@@ -1,0 +1,120 @@
+{
+  "name": "IA Daily News Digest (Public Version)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-200, 200],
+      "id": "trigger_node",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=Artificial+Intelligence+when:1d&hl=pt-BR&gl=BR&ceid=BR:pt-150"
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.1,
+      "position": [20, 200],
+      "id": "rss_node",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Resuma em Português (2 frases objetivas):\n{{ $json.title }}\nLink: {{ $json.link }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [240, 200],
+      "id": "ia_summarizer",
+      "name": "IA Resume Noticia"
+    },
+    {
+      "parameters": {
+        "aggregateAs": "singleItem",
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "field": "text",
+              "renameField": "lista_noticias"
+            }
+          ]
+        },
+        "options": {
+          "joiner": "\n\n"
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [500, 200],
+      "id": "aggregate_node",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Com base nestas notícias, escreva um resumo executivo de 3 linhas sobre as tendências do dia:\n\n{{ $json.lista_noticias }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [740, 200],
+      "id": "ai_general_summary",
+      "name": "IA Resumo Geral"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "SEU_CANAL_ID",
+          "mode": "list"
+        },
+        "text": "=🚀 *IA Daily Digest: {{ $now.format('dd/MM/yyyy') }}*\n\n💡 *Resumo Executivo:*\n> {{ $node[\"IA Resumo Geral\"].json.text }}\n\n---\n\n📰 *Notícias Detalhadas:*\n{{ $node[\"Aggregate\"].json.lista_noticias }}",
+        "otherOptions": {
+          "includeLinkToApp": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [1000, 200],
+      "id": "slack_node",
+      "name": "Slack"
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [400, 450],
+      "id": "azure_ai_model",
+      "name": "Azure OpenAI Model"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": { "main": [[{ "node": "rss_node", "type": "main", "index": 0 }]] },
+    "rss_node": { "main": [[{ "node": "ia_summarizer", "type": "main", "index": 0 }]] },
+    "ia_summarizer": { "main": [[{ "node": "aggregate_node", "type": "main", "index": 0 }]] },
+    "aggregate_node": { "main": [[{ "node": "ai_general_summary", "type": "main", "index": 0 }]] },
+    "ai_general_summary": { "main": [[{ "node": "slack_node", "type": "main", "index": 0 }]] },
+    "azure_ai_model": {
+      "ai_languageModel": [
+        [{ "node": "ia_summarizer", "type": "ai_languageModel", "index": 0 }],
+        [{ "node": "ai_general_summary", "type": "ai_languageModel", "index": 0 }]
+      ]
+    }
+  }
+}
